@@ -1,0 +1,12 @@
+names:
+- Car
+- Van
+- Truck
+- Pedestrian
+- Person_sitting
+- Cyclist
+- Tram
+- Misc
+nc: 8
+train: /Users/tanishyadav/Documents/machine-learning-project/models/checkpoints/yolo_kitti_20250412_080553/train.txt
+val: /Users/tanishyadav/Documents/machine-learning-project/models/checkpoints/yolo_kitti_20250412_080553/val.txt

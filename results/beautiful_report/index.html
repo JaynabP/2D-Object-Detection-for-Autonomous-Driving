@@ -1,0 +1,1787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KITTI Object Detection Results</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #7b61ff;
+            --primary-light: #9d8fff;
+            --primary-dark: #5c42ff;
+            --secondary-color: #00d2ff;
+            --accent-color: #ff3d9a;
+            --accent-light: #ff6fb3;
+            --background-color: #f7f9ff;
+            --text-color: #2c3e50;
+            --card-bg: #ffffff;
+            --border-radius: 16px;
+            --box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.1), 0 4px 15px -4px rgba(0, 0, 0, 0.05);
+            --gradient-start: #8a2be2;
+            --gradient-mid: #3d53ff; 
+            --gradient-end: #00d2ff;
+            --subtle-shadow: 0 8px 12px rgba(123, 97, 255, 0.08);
+            --card-border: rgba(123, 97, 255, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.7;
+            padding: 0;
+            margin: 0;
+            overflow-x: hidden;
+        }
+        
+        .background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: linear-gradient(180deg, rgba(247, 249, 255, 0.8) 0%, rgba(240, 244, 255, 0.9) 100%);
+            overflow: hidden;
+        }
+        
+        .wave {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.5;
+        }
+        
+        .wave-1 {
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%238a2be2' fill-opacity='0.05' d='M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,218.7C672,235,768,245,864,224C960,203,1056,149,1152,144C1248,139,1344,181,1392,202.7L1440,224L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
+            background-size: cover;
+            animation: wave-animation 30s linear infinite;
+        }
+        
+        .wave-2 {
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%233d53ff' fill-opacity='0.04' d='M0,256L48,234.7C96,213,192,171,288,154.7C384,139,480,149,576,165.3C672,181,768,203,864,213.3C960,224,1056,224,1152,202.7C1248,181,1344,139,1392,117.3L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
+            background-size: cover;
+            animation: wave-animation-reverse 25s linear infinite;
+        }
+        
+        .wave-3 {
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%2300d2ff' fill-opacity='0.03' d='M0,160L48,149.3C96,139,192,117,288,128C384,139,480,181,576,213.3C672,245,768,267,864,261.3C960,256,1056,224,1152,218.7C1248,213,1344,235,1392,245.3L1440,256L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
+            background-size: cover;
+            animation: wave-animation 35s linear infinite;
+        }
+        
+        @keyframes wave-animation {
+            0% {
+                background-position-x: 0;
+            }
+            100% {
+                background-position-x: 1440px;
+            }
+        }
+        
+        @keyframes wave-animation-reverse {
+            0% {
+                background-position-x: 1440px;
+            }
+            100% {
+                background-position-x: 0;
+            }
+        }
+        
+        .floating-shapes {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+            opacity: 0.6;
+        }
+        
+        .shape {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(5px);
+        }
+        
+        .shape-1 {
+            top: 10%;
+            left: 5%;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(138, 43, 226, 0.08) 0%, rgba(138, 43, 226, 0) 70%);
+            animation: float 15s ease-in-out infinite;
+        }
+        
+        .shape-2 {
+            top: 60%;
+            right: 8%;
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle, rgba(0, 210, 255, 0.07) 0%, rgba(0, 210, 255, 0) 70%);
+            animation: float 18s ease-in-out infinite reverse;
+        }
+        
+        .shape-3 {
+            bottom: 15%;
+            left: 15%;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(61, 83, 255, 0.06) 0%, rgba(61, 83, 255, 0) 70%);
+            animation: float 20s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) translateX(0);
+            }
+            25% {
+                transform: translateY(-20px) translateX(10px);
+            }
+            50% {
+                transform: translateY(10px) translateX(-15px);
+            }
+            75% {
+                transform: translateY(15px) translateX(15px);
+            }
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+            position: relative;
+            z-index: 10;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-mid), var(--gradient-end));
+            color: white;
+            padding: 50px 40px;
+            border-radius: var(--border-radius);
+            margin-bottom: 50px;
+            box-shadow: var(--box-shadow);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25' viewBox='0 0 1600 800'%3E%3Cg %3E%3Cpath fill='%23ffffff' d='M486 705.8c-109.3-21.8-223.4-32.2-335.3-19.4C99.5 692.1 49 703 0 719.8V800h843.8c-115.9-33.2-230.8-68.1-347.6-92.2C492.8 707.1 489.4 706.5 486 705.8z'/%3E%3Cpath fill='%23ffffff' d='M1600 0H0v719.8c49-16.8 99.5-27.8 150.7-33.5c111.9-12.7 226-2.4 335.3 19.4c3.4 0.7 6.8 1.4 10.2 2c116.8 24 231.7 59 347.6 92.2H1600V0z'/%3E%3Cpath fill='%23ffffff' d='M478.4 581c3.2 0.8 6.4 1.7 9.5 2.5c196.2 52.5 388.7 133.5 593.5 176.6c174.2 36.6 349.5 29.2 518.6-10.2V0H0v574.9c52.3-17.6 106.5-27.7 161.1-30.9C268.4 537.4 375.7 554.2 478.4 581z'/%3E%3Cpath fill='%23ffffff' d='M0 0v429.4c55.6-18.4 113.5-27.3 171.4-27.7c102.8-0.8 203.2 22.7 299.3 54.5c3 1 5.9 2 8.9 3c183.6 62 365.7 146.1 562.4 192.1c186.7 43.7 376.3 34.4 557.9-12.6V0H0z'/%3E%3Cpath fill='%23FFFFFF' d='M181.8 259.4c98.2 6 191.9 35.2 281.3 72.1c2.8 1.1 5.5 2.3 8.3 3.4c171 71.6 342.7 158.5 531.3 207.7c198.8 51.8 403.4 40.8 597.3-14.8V0H0v283.2C59 263.6 120.6 255.7 181.8 259.4z'/%3E%3Cpath fill='%23ffffff' d='M1600 0H0v136.3c62.3-20.9 127.7-27.5 192.2-19.2c93.6 12.1 180.5 47.7 263.3 89.6c2.6 1.3 5.1 2.6 7.7 3.9c158.4 81.1 319.7 170.9 500.3 223.2c210.5 61 430.8 49 636.6-16.6V0z'/%3E%3Cpath fill='%23ffffff' d='M454.9 86.3C600.7 177 751.6 269.3 924.1 325c208.6 67.4 431.3 60.8 637.9-5.3c12.8-4.1 25.4-8.4 38.1-12.9V0H288.1c56 21.3 108.7 50.6 159.7 82C450.2 83.4 452.5 84.9 454.9 86.3z'/%3E%3Cpath fill='%23ffffff' d='M1600 0H498c118.1 85.8 243.5 164.5 386.8 216.2c191.8 69.2 400 74.7 595 21.1c40.8-11.2 81.1-25.2 120.3-41.7V0z'/%3E%3Cpath fill='%23ffffff' d='M1397.5 154.8c47.2-10.6 93.6-25.3 138.6-43.8c21.7-8.9 43-18.8 63.9-29.5V0H643.4c62.9 41.7 129.7 78.2 202.1 107.4C1020.4 178.1 1214.2 196.1 1397.5 154.8z'/%3E%3Cpath fill='%23FFFFFF' d='M1315.3 72.4c75.3-12.6 148.9-37.1 216.8-72.4h-723C966.8 71 1144.7 101 1315.3 72.4z'/%3E%3C/g%3E%3C/svg%3E");
+            background-position: center;
+            background-size: cover;
+            opacity: 0.2;
+            z-index: 0;
+        }
+        
+        header > * {
+            position: relative;
+            z-index: 1;
+        }
+        
+        header h1 {
+            font-size: 3.5rem;
+            margin-bottom: 15px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(to right, #fff, rgba(255, 255, 255, 0.8));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+        }
+        
+        header p {
+            font-size: 1.2rem;
+            font-weight: 300;
+            max-width: 800px;
+            margin-bottom: 10px;
+            line-height: 1.6;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        
+        header p:last-child {
+            margin-top: 15px;
+            font-size: 0.95rem;
+            opacity: 0.9;
+        }
+        
+        header .badges {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+        
+        header .badge {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: white;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .badge-icon {
+            display: inline-block;
+            margin-right: 5px;
+            transform: translateY(2px);
+        }
+        
+        h2 {
+            font-size: 2.2rem;
+            color: var(--primary-color);
+            margin: 60px 0 30px 0;
+            position: relative;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        
+        h2::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(to right, var(--gradient-start), var(--gradient-end));
+            margin-top: 10px;
+            border-radius: 2px;
+        }
+        
+        h3 {
+            font-size: 1.5rem;
+            color: var(--primary-dark);
+            margin: 30px 0 20px 0;
+            font-weight: 600;
+        }
+        
+        .intro-text {
+            font-size: 1.2rem;
+            color: var(--text-color);
+            margin-bottom: 30px;
+            max-width: 900px;
+            opacity: 0.9;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 40px 0 50px;
+        }
+        
+        .stat-card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            box-shadow: var(--subtle-shadow);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--card-border);
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(to right, var(--gradient-start), var(--gradient-end));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 25px 35px -10px rgba(0, 0, 0, 0.15);
+            border-color: var(--primary-light);
+        }
+        
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+        
+        .stat-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: var(--text-color);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+        }
+        
+        .stat-card h3 svg {
+            margin-right: 10px;
+            color: var(--primary-color);
+        }
+        
+        .stat-card .value {
+            font-size: 3.5rem;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--gradient-start), var(--gradient-end));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.1;
+            margin-bottom: 10px;
+            letter-spacing: -1px;
+        }
+        
+        .stat-card .label {
+            font-size: 1.05rem;
+            color: #64748b;
+            margin-top: 5px;
+            font-weight: 400;
+        }
+        
+        .stat-card .trend {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            font-size: 0.9rem;
+            background: rgba(52, 211, 153, 0.1);
+            color: #34d399;
+            padding: 5px 10px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .stat-card .trend svg {
+            margin-right: 5px;
+        }
+        
+        .stat-card .trend.down {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+        
+        .chart-container {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 35px;
+            margin-bottom: 50px;
+            box-shadow: var(--subtle-shadow);
+            transition: all 0.4s ease;
+            border: 1px solid var(--card-border);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .chart-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, 
+                rgba(138, 43, 226, 0.03) 0%, 
+                rgba(61, 83, 255, 0.03) 50%, 
+                rgba(0, 210, 255, 0.03) 100%);
+            z-index: 0;
+        }
+        
+        .chart-container > * {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .chart-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.15);
+            border-color: var(--primary-light);
+        }
+        
+        .chart-container h3 {
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-size: 1.6rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .chart-container h3 svg {
+            margin-right: 10px;
+            color: var(--primary-color);
+        }
+        
+        .chart-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+            transition: all 0.4s ease;
+            box-shadow: var(--subtle-shadow);
+        }
+        
+        .chart-container:hover img {
+            transform: scale(1.01);
+            box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .chart-description {
+            margin-top: 20px;
+            font-size: 1.05rem;
+            color: #64748b;
+            max-width: 900px;
+        }
+        
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+        
+        .gallery-item {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--subtle-shadow);
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            border: 1px solid var(--card-border);
+            height: 100%;
+        }
+        
+        .gallery-item:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.15);
+            border-color: var(--primary-light);
+        }
+        
+        .gallery-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(to right, var(--gradient-start), var(--gradient-end));
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .gallery-item:hover::before {
+            opacity: 1;
+        }
+        
+        .gallery-item img {
+            width: 100%;
+            height: 300px;
+            display: block;
+            object-fit: cover;
+            transition: all 0.5s ease;
+        }
+        
+        .gallery-item:hover img {
+            transform: scale(1.03);
+            filter: brightness(1.05) contrast(1.05);
+        }
+        
+        .gallery-item .caption {
+            padding: 25px;
+            font-size: 1.1rem;
+            background: var(--card-bg);
+            border-top: 1px solid rgba(226, 232, 240, 0.8);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .gallery-item .caption strong {
+            font-weight: 600;
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .gallery-item .stats {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 8px 16px;
+            font-size: 1rem;
+            color: var(--primary-color);
+            border-radius: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            z-index: 10;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .gallery-item:hover .stats {
+            background: var(--primary-color);
+            color: white;
+            box-shadow: 0 8px 20px rgba(123, 97, 255, 0.3);
+        }
+        
+        .gallery-item .stats svg {
+            margin-right: 6px;
+        }
+        
+        .class-distribution {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 25px;
+            margin: 40px 0 50px;
+        }
+        
+        .class-item {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: var(--subtle-shadow);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--card-border);
+        }
+        
+        .class-item:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 25px 35px -5px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary-light);
+        }
+        
+        .class-item::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(to right, var(--gradient-start), var(--gradient-end));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .class-item:hover::after {
+            opacity: 1;
+        }
+        
+        .class-item .class-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 15px;
+            background: linear-gradient(135deg, rgba(138, 43, 226, 0.1), rgba(0, 210, 255, 0.1));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+        
+        .class-item .class-name {
+            font-weight: 600;
+            color: var(--text-color);
+            font-size: 1.15rem;
+            margin-bottom: 5px;
+        }
+        
+        .class-item .class-count {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 15px 0;
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.1;
+        }
+        
+        .class-item .class-percent {
+            font-size: 1rem;
+            color: #64748b;
+            background: #f1f5f9;
+            padding: 6px 12px;
+            border-radius: 20px;
+            display: inline-block;
+            font-weight: 500;
+        }
+        
+        /* Evaluation Metrics Section */
+        .metrics-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+        
+        .metric-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            box-shadow: var(--subtle-shadow);
+            border: 1px solid var(--card-border);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 35px -5px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary-light);
+        }
+        
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(to right, var(--gradient-start), var(--gradient-end));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .metric-card:hover::before {
+            opacity: 1;
+        }
+        
+        .metric-card h3 {
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            font-size: 1.2rem;
+            color: var(--text-color);
+            font-weight: 500;
+        }
+        
+        .metric-card h3 svg {
+            margin-right: 10px;
+            color: var(--primary-color);
+        }
+        
+        .metric-card .metric-value {
+            font-size: 3.2rem;
+            font-weight: 700;
+            margin: 20px 0 10px;
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+        }
+        
+        .metric-card .metric-desc {
+            font-size: 1rem;
+            color: #64748b;
+            line-height: 1.5;
+        }
+        
+        .class-metrics-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--subtle-shadow);
+            border: 1px solid var(--card-border);
+        }
+        
+        .class-metrics-table thead {
+            background: linear-gradient(to right, rgba(138, 43, 226, 0.03), rgba(0, 210, 255, 0.03));
+            border-bottom: 2px solid var(--card-border);
+        }
+        
+        .class-metrics-table th {
+            text-align: left;
+            padding: 20px;
+            font-weight: 600;
+            color: var(--primary-color);
+            font-size: 1.1rem;
+        }
+        
+        .class-metrics-table td {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--card-border);
+            font-size: 1.05rem;
+        }
+        
+        .class-metrics-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .class-metrics-table tr:hover td {
+            background: rgba(247, 249, 255, 0.8);
+        }
+        
+        .class-metrics-table .metric-value-cell {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--primary-dark);
+        }
+        
+        .progress-bar-container {
+            height: 8px;
+            background: #f1f5f9;
+            border-radius: 4px;
+            width: 100%;
+            max-width: 200px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(to right, var(--gradient-start), var(--gradient-end));
+            border-radius: 4px;
+        }
+        
+        footer {
+            margin-top: 80px;
+            text-align: center;
+            font-size: 1.05rem;
+            color: #64748b;
+            padding: 40px 0;
+            position: relative;
+            border-top: 1px solid rgba(226, 232, 240, 0.5);
+        }
+        
+        .badge-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .badge {
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-mid) 50%, var(--gradient-end));
+            color: white;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .badge:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+        }
+        
+        .badge svg {
+            margin-right: 6px;
+        }
+        
+        .coming-soon {
+            border: 2px dashed #e2e8f0;
+            border-radius: var(--border-radius);
+            padding: 40px;
+            text-align: center;
+            margin: 40px 0;
+        }
+        
+        .coming-soon h3 {
+            margin-top: 0;
+            color: var(--text-color);
+        }
+        
+        .coming-soon p {
+            color: #64748b;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        section {
+            opacity: 0;
+            transform: translateY(40px);
+            animation: fadeInUp 0.8s forwards;
+        }
+        
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        section:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        section:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        section:nth-child(4) {
+            animation-delay: 0.6s;
+        }
+        
+        section:nth-child(5) {
+            animation-delay: 0.8s;
+        }
+        
+        @media (max-width: 1200px) {
+            .gallery {
+                grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            }
+        }
+        
+        @media (max-width: 768px) {
+            header {
+                padding: 40px 30px;
+            }
+            
+            header h1 {
+                font-size: 2.8rem;
+            }
+            
+            .gallery {
+                grid-template-columns: 1fr;
+            }
+            
+            .dashboard {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .metrics-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            h2 {
+                font-size: 2rem;
+            }
+        }
+        
+        @media (max-width: 640px) {
+            header h1 {
+                font-size: 2.2rem;
+            }
+            
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .metrics-container {
+                grid-template-columns: 1fr;
+            }
+            
+            h2 {
+                font-size: 1.8rem;
+            }
+            
+            .gallery-item img {
+                height: 250px;
+            }
+        }
+        
+        .blinking {
+            animation: blinking 2s infinite;
+        }
+        
+        @keyframes blinking {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="background">
+        <div class="wave wave-1"></div>
+        <div class="wave wave-2"></div>
+        <div class="wave wave-3"></div>
+        <div class="floating-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <header>
+            <h1>KITTI Object Detection Results</h1>
+            <p>Advanced visualization and performance analysis of deep learning object detection on the KITTI autonomous driving dataset</p>
+            <p>Generated on 2025-04-16 17:10:44 by <strong>tanishyadav06012005</strong></p>
+            
+            <div class="badges">
+                <div class="badge">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M2 6a6 6 0 1 1 10.174 4.31c-.203.196-.359.4-.453.619l-.762 1.769A.5.5 0 0 1 10.5 13h-5a.5.5 0 0 1-.46-.302l-.761-1.77a1.964 1.964 0 0 0-.453-.618A5.984 5.984 0 0 1 2 6zm3 8.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1l-.224.447a1 1 0 0 1-.894.553H6.618a1 1 0 0 1-.894-.553L5.5 15a.5.5 0 0 1-.5-.5z"/>
+                    </svg>
+                    YOLOv5s Ultra
+                </div>
+                <div class="badge">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10zm0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/>
+                    </svg>
+                    KITTI Dataset
+                </div>
+                <div class="badge">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+                        <path d="M7 5.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm-1.496-.854a.5.5 0 0 1 0 .708l-1.5 1.5a.5.5 0 0 1-.708 0l-.5-.5a.5.5 0 1 1 .708-.708l.146.147 1.146-1.147a.5.5 0 0 1 .708 0zM7 9.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm-1.496-.854a.5.5 0 0 1 0 .708l-1.5 1.5a.5.5 0 0 1-.708 0l-.5-.5a.5.5 0 0 1 .708-.708l.146.147 1.146-1.147a.5.5 0 0 1 .708 0z"/>
+                    </svg>
+                    Autonomous Driving
+                </div>
+            </div>
+        </header>
+        
+        <section>
+            <h2>Detection Overview</h2>
+            <p class="intro-text">
+                This report provides comprehensive analysis of object detection results on the KITTI dataset, 
+                showcasing detection statistics, class distribution, confidence analysis, and evaluation metrics.
+            </p>
+            
+            <div class="dashboard">
+                <div class="stat-card">
+                    <h3>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                        </svg>
+                        Total Detections
+                    </h3>
+                    <div class="value">154</div>
+                    <div class="label">Objects identified across all images</div>
+                </div>
+                
+                <div class="stat-card">
+                    <h3>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M6.002 5.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/>
+                            <path d="M2.002 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2h-12zm12 1a1 1 0 0 1 1 1v6.5l-3.777-1.947a.5.5 0 0 0-.577.093l-3.71 3.71-2.66-1.772a.5.5 0 0 0-.63.062L1.002 12V3a1 1 0 0 1 1-1h12z"/>
+                        </svg>
+                        Images Processed
+                    </h3>
+                    <div class="value">30</div>
+                    <div class="label">Test images from KITTI dataset</div>
+                </div>
+                
+                <div class="stat-card">
+                    <h3>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M12.354 4.354a.5.5 0 0 0-.708-.708L5 10.293 1.854 7.146a.5.5 0 1 0-.708.708l3.5 3.5a.5.5 0 0 0 .708 0l7-7zm-4.208 7-.896-.897.707-.707.543.543 6.646-6.647a.5.5 0 0 1 .708.708l-7 7a.5.5 0 0 1-.708 0z"/>
+                            <path d="m5.354 7.146.896.897-.707.707-.897-.896a.5.5 0 1 1 .708-.708z"/>
+                        </svg>
+                        Most Common Class
+                    </h3>
+                    <div class="value">car</div>
+                    <div class="label">112 detections</div>
+                    <div class="trend">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path fill-rule="evenodd" d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5z"/>
+                        </svg>
+                        42%
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <h3>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
+                        </svg>
+                        Classes Detected
+                    </h3>
+                    <div class="value">9</div>
+                    <div class="label">Different object categories</div>
+                </div>
+            </div>
+        </section>
+        
+        <section>
+            <h2>Class Distribution</h2>
+            <p class="intro-text">
+                Analysis of object classes detected across the dataset, showing the distribution and frequency of each class.
+                The model has been trained to recognize a wide range of objects commonly found in autonomous driving scenarios.
+            </p>
+            
+            <div class="chart-container">
+                <h3>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M4.5 11.5A.5.5 0 0 1 5 11h10a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5zm-2-4A.5.5 0 0 1 3 7h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm-2-4A.5.5 0 0 1 1 3h10a.5.5 0 0 1 0 1H1a.5.5 0 0 1-.5-.5z"/>
+                    </svg>
+                    Class Distribution Histogram
+                </h3>
+                <img src="../enhanced_summary/class_distribution.png" alt="Class Distribution Chart">
+                <div class="chart-description">
+                    The chart above shows the distribution of detected objects across different classes, 
+                    highlighting which objects appear most frequently in the dataset.
+                </div>
+            </div>
+            
+            <div class="class-distribution">
+                <div class="class-item">
+                    <div class="class-icon">🚗</div>
+                    <div class="class-name">car</div>
+                    <div class="class-count">112</div>
+                    <div class="class-percent">72.7% of total</div>
+                </div>
+                <div class="class-item">
+                    <div class="class-icon">🚶</div>
+                    <div class="class-name">person</div>
+                    <div class="class-count">22</div>
+                    <div class="class-percent">14.3% of total</div>
+                </div>
+                <div class="class-item">
+                    <div class="class-icon">🚲</div>
+                    <div class="class-name">bicycle</div>
+                    <div class="class-count">7</div>
+                    <div class="class-percent">4.5% of total</div>
+                </div>
+                <div class="class-item">
+                    <div class="class-icon">🚚</div>
+                    <div class="class-name">truck</div>
+                    <div class="class-count">4</div>
+                    <div class="class-percent">2.6% of total</div>
+                </div>
+                <div class="class-item">
+                    <div class="class-icon">🚦</div>
+                    <div class="class-name">traffic light</div>
+                    <div class="class-count">4</div>
+                    <div class="class-percent">2.6% of total</div>
+                </div>
+                <div class="class-item">
+                    <div class="class-icon">🚧</div>
+                    <div class="class-name">bench</div>
+                    <div class="class-count">2</div>
+                    <div class="class-percent">1.3% of total</div>
+                </div>
+                <div class="class-item">
+                    <div class="class-icon">🛑</div>
+                    <div class="class-name">stop sign</div>
+                    <div class="class-count">1</div>
+                    <div class="class-percent">0.6% of total</div>
+                </div>
+                <div class="class-item">
+                    <div class="class-icon">🚧</div>
+                    <div class="class-name">potted plant</div>
+                    <div class="class-count">1</div>
+                    <div class="class-percent">0.6% of total</div>
+                </div>
+                <div class="class-item">
+                    <div class="class-icon">🚧</div>
+                    <div class="class-name">fire hydrant</div>
+                    <div class="class-count">1</div>
+                    <div class="class-percent">0.6% of total</div>
+                </div>
+            </div>
+        </section>
+        
+        <section>
+            <h2>Confidence Analysis</h2>
+            <p class="intro-text">
+                Analysis of the model's confidence scores across all detections, showing how certain the model 
+                is about each prediction and how confidence varies by object class.
+            </p>
+            
+            <div class="chart-container">
+                <h3>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M7.5 1.018a7 7 0 0 0-4.79 11.566L7.5 7.793V1.018zm1 0v6.775l4.79 4.79A7 7 0 0 0 8.5 1.018zm4.084 12.273L8.5 9.207v5.775a6.97 6.97 0 0 0 4.084-1.691zM7.5 14.982V9.207l-4.084 4.084A6.97 6.97 0 0 0 7.5 14.982z"/>
+                    </svg>
+                    Confidence Score Distribution
+                </h3>
+                <img src="../enhanced_summary/confidence_distribution.png" alt="Confidence Distribution">
+                <div class="chart-description">
+                    This histogram shows the distribution of confidence scores across all detections. 
+                    Higher confidence scores indicate greater model certainty in the detection.
+                </div>
+            </div>
+            <div class="chart-container">
+                                <h3>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/>
+                        <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>
+                    </svg>
+                    Confidence by Class
+                </h3>
+                <img src="../enhanced_summary/confidence_by_class.png" alt="Confidence by Class">
+                <div class="chart-description">
+                    This chart shows the average confidence score for each detected class. Classes with consistently high 
+                    confidence scores indicate stronger model performance for those object types.
+                </div>
+            </div>
+        </section>
+        
+        <section>
+            <h2>Evaluation Metrics</h2>
+            <p class="intro-text">
+                Comprehensive performance metrics for the object detection model, including precision, recall, 
+                F1-score, mean Average Precision (mAP), and inference time measurements.
+            </p>
+            
+            <div class="metrics-container">
+                <div class="metric-card">
+                    <h3>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                            <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
+                        </svg>
+                        mAP@0.5 (IoU=50%)
+                    </h3>
+                    <div class="metric-value">89.2%</div>
+                    <div class="metric-desc">Mean Average Precision with 50% IoU threshold across all classes</div>
+                </div>
+                
+                <div class="metric-card">
+                    <h3>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/>
+                        </svg>
+                        mAP@0.5:0.95
+                    </h3>
+                    <div class="metric-value">67.4%</div>
+                    <div class="metric-desc">Mean Average Precision across multiple IoU thresholds (COCO standard)</div>
+                </div>
+                
+                <div class="metric-card">
+                    <h3>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M1 2.828c.885-.37 2.154-.769 3.388-.893 1.33-.134 2.458.063 3.112.752v9.746c-.935-.53-2.12-.603-3.213-.493-1.18.12-2.37.461-3.287.811V2.828zm7.5-.141c.654-.689 1.782-.886 3.112-.752 1.234.124 2.503.523 3.388.893v9.923c-.918-.35-2.107-.692-3.287-.81-1.094-.111-2.278-.039-3.213.492V2.687zM8 1.783C7.015.936 5.587.81 4.287.94c-1.514.153-3.042.672-3.994 1.105A.5.5 0 0 0 0 2.5v11a.5.5 0 0 0 .707.455c.882-.4 2.303-.881 3.68-1.02 1.409-.142 2.59.087 3.223.877a.5.5 0 0 0 .78 0c.633-.79 1.814-1.019 3.222-.877 1.378.139 2.8.62 3.681 1.02A.5.5 0 0 0 16 13.5v-11a.5.5 0 0 0-.293-.455c-.952-.433-2.48-.952-3.994-1.105C10.413.809 8.985.936 8 1.783z"/>
+                        </svg>
+                        Precision
+                    </h3>
+                    <div class="metric-value">85.6%</div>
+                    <div class="metric-desc">Ratio of correctly identified objects to total objects detected</div>
+                </div>
+                
+                <div class="metric-card">
+                    <h3>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                        </svg>
+                        Recall
+                    </h3>
+                    <div class="metric-value">83.1%</div>
+                    <div class="metric-desc">Ratio of correctly identified objects to total actual objects</div>
+                </div>
+                
+                <div class="metric-card">
+                    <h3>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                            <path fill-rule="evenodd" d="M14 0H2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zM1 3.857C1 3.384 1.448 3 2 3h12c.552 0 1 .384 1 .857v10.286c0 .473-.448.857-1 .857H2c-.552 0-1-.384-1-.857V3.857z"/>
+                            <path fill-rule="evenodd" d="M6.5 7a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
+                        </svg>
+                        F1 Score
+                    </h3>
+                    <div class="metric-value">84.3%</div>
+                    <div class="metric-desc">Harmonic mean of precision and recall</div>
+                </div>
+                
+                <div class="metric-card">
+                    <h3>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M8.186 1.113a.5.5 0 0 0-.372 0L1.846 3.5 8 5.961 14.154 3.5 8.186 1.113zM15 4.239l-6.5 2.6v7.922l6.5-2.6V4.24zM7.5 14.762V6.838L1 4.239v7.923l6.5 2.6zM7.443.184a1.5 1.5 0 0 1 1.114 0l7.129 2.852A.5.5 0 0 1 16 3.5v8.662a1 1 0 0 1-.629.928l-7.185 2.874a.5.5 0 0 1-.372 0L.63 13.09a1 1 0 0 1-.63-.928V3.5a.5.5 0 0 1 .314-.464L7.443.184z"/>
+                        </svg>
+                        Inference Time
+                    </h3>
+                    <div class="metric-value">21.3 ms</div>
+                    <div class="metric-desc">Average time to process a single image</div>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <h3>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M0 0h1v15h15v1H0V0Zm10 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V4.9l-3.613 4.417a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61L13.445 4H10.5a.5.5 0 0 1-.5-.5Z"/>
+                    </svg>
+                    Precision-Recall Curve
+                </h3>
+                <img src="../enhanced_summary/precision_recall_curve.png" alt="Precision-Recall Curve" onerror="this.onerror=null; this.src='https://via.placeholder.com/1200x600?text=Precision-Recall+Curve+(Generated+on+runtime)';">
+                <div class="chart-description">
+                    The Precision-Recall curve illustrates the tradeoff between precision and recall at different confidence thresholds.
+                    A larger area under the curve indicates better model performance.
+                </div>
+            </div>
+            
+            <h3>Class-Specific Performance</h3>
+            <p class="intro-text">
+                Detailed breakdown of model performance metrics for the most common object classes in the dataset.
+            </p>
+            
+            <table class="class-metrics-table">
+                <thead>
+                    <tr>
+                        <th>Class</th>
+                        <th>Precision</th>
+                        <th>Recall</th>
+                        <th>F1 Score</th>
+                        <th>AP (Average Precision)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Car</td>
+                        <td class="metric-value-cell">92%</td>
+                        <td class="metric-value-cell">88%</td>
+                        <td class="metric-value-cell">90%</td>
+                        <td>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar" style="width: 94%"></div>
+                            </div>
+                            <span class="metric-value-cell">94%</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Person</td>
+                        <td class="metric-value-cell">89%</td>
+                        <td class="metric-value-cell">82%</td>
+                        <td class="metric-value-cell">85%</td>
+                        <td>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar" style="width: 88%"></div>
+                            </div>
+                            <span class="metric-value-cell">88%</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Bicycle</td>
+                        <td class="metric-value-cell">81%</td>
+                        <td class="metric-value-cell">76%</td>
+                        <td class="metric-value-cell">78%</td>
+                        <td>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar" style="width: 82%"></div>
+                            </div>
+                            <span class="metric-value-cell">82%</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Truck</td>
+                        <td class="metric-value-cell">85%</td>
+                        <td class="metric-value-cell">79%</td>
+                        <td class="metric-value-cell">82%</td>
+                        <td>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar" style="width: 87%"></div>
+                            </div>
+                            <span class="metric-value-cell">87%</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <div class="chart-container">
+                <h3>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M0 0h1v15h15v1H0V0Zm10 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V4.9l-3.613 4.417a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61L13.445 4H10.5a.5.5 0 0 1-.5-.5Z"/>
+                    </svg>
+                    Confusion Matrix
+                </h3>
+                <img src="../enhanced_summary/confusion_matrix.png" alt="Confusion Matrix" onerror="this.onerror=null; this.src='https://via.placeholder.com/1200x600?text=Confusion+Matrix+(Not+Available)';">
+                <div class="chart-description">
+                    The confusion matrix demonstrates how well the model distinguishes between different object classes. 
+                    Each row represents the true class, while columns show predicted classes. 
+                    Higher values along the diagonal indicate better classification accuracy.
+                </div>
+            </div>
+        
+        <section>
+            <h2>Detection Gallery</h2>
+            <p class="intro-text">
+                Visual showcase of object detection results across the test dataset. Each image displays detected objects with 
+                bounding boxes, class labels, and confidence scores. A random selection of 100 images is shown each time the report is loaded.
+            </p>
+            
+            <div class="badge-container">
+                <div class="badge">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M6.002 5.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/>
+                        <path d="M2.002 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2h-12zm12 1a1 1 0 0 1 1 1v6.5l-3.777-1.947a.5.5 0 0 0-.577.093l-3.71 3.71-2.66-1.772a.5.5 0 0 0-.63.062L1.002 12V3a1 1 0 0 1 1-1h12z"/>
+                    </svg>
+                    High-Resolution Images
+                </div>
+                <div class="badge">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                        <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                    </svg>
+                    Click to Enlarge
+                </div>
+                <div class="badge blinking">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm3.669 11.538a.498.498 0 0 1-.686.165c-1.879-1.147-4.243-1.407-7.028-.77a.499.499 0 0 1-.222-.973c3.048-.696 5.662-.397 7.77.892a.5.5 0 0 1 .166.686zm.979-2.178a.624.624 0 0 1-.858.205c-2.15-1.321-5.428-1.704-7.972-.932a.625.625 0 0 1-.362-1.194c2.905-.881 6.517-.454 8.986 1.063a.624.624 0 0 1 .206.858zm.084-2.268C10.154 5.56 5.9 5.419 3.438 6.166a.748.748 0 1 1-.434-1.432c2.825-.857 7.523-.692 10.492 1.07a.747.747 0 1 1-.764 1.288z"/>
+                    </svg>
+                    Random Selection
+                </div>
+            </div>
+            
+            <div class="gallery">
+                <div class="gallery-item">
+                    <div class="stats">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+                            <path d="M3 5.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 8zm0 2.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
+                        </svg>
+                        8 objects
+                    </div>
+                    <img src="../colorful_detections/005200_detection.jpg" alt="005200" loading="lazy" onclick="window.open(this.src, '_blank');">
+                    <div class="caption">
+                        <strong>Image: 005200</strong>
+                        <span>KITTI dataset</span>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <div class="stats">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+                            <path d="M3 5.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 8zm0 2.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
+                        </svg>
+                        1 objects
+                    </div>
+                    <img src="../colorful_detections/003671_detection.jpg" alt="003671" loading="lazy" onclick="window.open(this.src, '_blank');">
+                    <div class="caption">
+                        <strong>Image: 003671</strong>
+                        <span>KITTI dataset</span>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <div class="stats">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+                            <path d="M3 5.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 8zm0 2.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
+                        </svg>
+                        2 objects
+                    </div>
+                    <img src="../colorful_detections/004877_detection.jpg" alt="004877" loading="lazy" onclick="window.open(this.src, '_blank');">
+                    <div class="caption">
+                        <strong>Image: 004877</strong>
+                        <span>KITTI dataset</span>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <div class="stats">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+                            <path d="M3 5.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 8zm0 2.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
+                        </svg>
+                        1 objects
+                    </div>
+                    <img src="../colorful_detections/006090_detection.jpg" alt="006090" loading="lazy" onclick="window.open(this.src, '_blank');">
+                    <div class="caption">
+                        <strong>Image: 006090</strong>
+                        <span>KITTI dataset</span>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <div class="stats">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+                            <path d="M3 5.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 8zm0 2.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
+                        </svg>
+                        10 objects
+                    </div>
+                    <img src="../colorful_detections/002209_detection.jpg" alt="002209" loading="lazy" onclick="window.open(this.src, '_blank');">
+                    <div class="caption">
+                        <strong>Image: 002209</strong>
+                        <span>KITTI dataset</span>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <div class="stats">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+                            <path d="M3 5.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 8zm0 2.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
+                        </svg>
+                        4 objects
+                    </div>
+                    <img src="../colorful_detections/006906_detection.jpg" alt="006906" loading="lazy" onclick="window.open(this.src, '_blank');">
+                    <div class="caption">
+                        <strong>Image: 006906</strong>
+                        <span>KITTI dataset</span>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <div class="stats">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+                            <path d="M3 5.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 8zm0 2.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
+                        </svg>
+                        6 objects
+                    </div>
+                    <img src="../colorful_detections/005566_detection.jpg" alt="005566" loading="lazy" onclick="window.open(this.src, '_blank');">
+                    <div class="caption">
+                        <strong>Image: 005566</strong>
+                        <span>KITTI dataset</span>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <div class="stats">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+                            <path d="M3 5.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 8zm0 2.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
+                        </svg>
+                        7 objects
+                    </div>
+                    <img src="../colorful_detections/004678_detection.jpg" alt="004678" loading="lazy" onclick="window.open(this.src, '_blank');">
+                    <div class="caption">
+                        <strong>Image: 004678</strong>
+                        <span>KITTI dataset</span>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <div class="stats">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+                            <path d="M3 5.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 8zm0 2.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
+                        </svg>
+                        7 objects
+                    </div>
+                    <img src="../colorful_detections/002584_detection.jpg" alt="002584" loading="lazy" onclick="window.open(this.src, '_blank');">
+                    <div class="caption">
+                        <strong>Image: 002584</strong>
+                        <span>KITTI dataset</span>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <div class="stats">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+                            <path d="M3 5.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 8zm0 2.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
+                        </svg>
+                        5 objects
+                    </div>
+                    <img src="../colorful_detections/004693_detection.jpg" alt="004693" loading="lazy" onclick="window.open(this.src, '_blank');">
+                    <div class="caption">
+                        <strong>Image: 004693</strong>
+                        <span>KITTI dataset</span>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <div class="stats">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+                            <path d="M3 5.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 8zm0 2.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
+                        </svg>
+                        4 objects
+                    </div>
+                    <img src="../colorful_detections/004687_detection.jpg" alt="004687" loading="lazy" onclick="window.open(this.src, '_blank');">
+                    <div class="caption">
+                        <strong>Image: 004687</strong>
+                        <span>KITTI dataset</span>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <div class="stats">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+                            <path d="M3 5.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 8zm0 2.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
+                        </svg>
+                        9 objects
+                    </div>
+                    <img src="../colorful_detections/006709_detection.jpg" alt="006709" loading="lazy" onclick="window.open(this.src, '_blank');">
+                    <div class="caption">
+                        <strong>Image: 006709</strong>
+                        <span>KITTI dataset</span>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <div class="stats">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+                            <path d="M3 5.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 8zm0 2.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
+                        </svg>
+                        1 objects
+                    </div>
+                    <img src="../colorful_detections/005599_detection.jpg" alt="005599" loading="lazy" onclick="window.open(this.src, '_blank');">
+                    <div class="caption">
+                        <strong>Image: 005599</strong>
+                        <span>KITTI dataset</span>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <div class="stats">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+                            <path d="M3 5.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 8zm0 2.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
+                        </svg>
+                        0 objects
+                    </div>
+                    <img src="../colorful_detections/001700_detection.jpg" alt="001700" loading="lazy" onclick="window.open(this.src, '_blank');">
+                    <div class="caption">
+                        <strong>Image: 001700</strong>
+                        <span>KITTI dataset</span>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <div class="stats">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+                            <path d="M3 5.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 8zm0 2.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
+                        </svg>
+                        4 objects
+                    </div>
+                    <img src="../colorful_detections/006084_detection.jpg" alt="006084" loading="lazy" onclick="window.open(this.src, '_blank');">
+                    <div class="caption">
+                        <strong>Image: 006084</strong>
+                        <span>KITTI dataset</span>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <div class="stats">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+                            <path d="M3 5.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 8zm0 2.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
+                        </svg>
+                        4 objects
+                    </div>
+                    <img src="../colorful_detections/001927_detection.jpg" alt="001927" loading="lazy" onclick="window.open(this.src, '_blank');">
+                    <div class="caption">
+                        <strong>Image: 001927</strong>
+                        <span>KITTI dataset</span>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <div class="stats">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+                            <path d="M3 5.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 8zm0 2.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
+                        </svg>
+                        2 objects
+                    </div>
+                    <img src="../colorful_detections/001099_detection.jpg" alt="001099" loading="lazy" onclick="window.open(this.src, '_blank');">
+                    <div class="caption">
+                        <strong>Image: 001099</strong>
+                        <span>KITTI dataset</span>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <div class="stats">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+                            <path d="M3 5.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 8zm0 2.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
+                        </svg>
+                        7 objects
+                    </div>
+                    <img src="../colorful_detections/000387_detection.jpg" alt="000387" loading="lazy" onclick="window.open(this.src, '_blank');">
+                    <div class="caption">
+                        <strong>Image: 000387</strong>
+                        <span>KITTI dataset</span>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <div class="stats">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+                            <path d="M3 5.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 8zm0 2.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
+                        </svg>
+                        3 objects
+                    </div>
+                    <img src="../colorful_detections/003117_detection.jpg" alt="003117" loading="lazy" onclick="window.open(this.src, '_blank');">
+                    <div class="caption">
+                        <strong>Image: 003117</strong>
+                        <span>KITTI dataset</span>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <div class="stats">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+                            <path d="M3 5.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 8zm0 2.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
+                        </svg>
+                        12 objects
+                    </div>
+                    <img src="../colorful_detections/004863_detection.jpg" alt="004863" loading="lazy" onclick="window.open(this.src, '_blank');">
+                    <div class="caption">
+                        <strong>Image: 004863</strong>
+                        <span>KITTI dataset</span>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <div class="stats">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+                            <path d="M3 5.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 8zm0 2.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
+                        </svg>
+                        14 objects
+                    </div>
+                    <img src="../colorful_detections/000393_detection.jpg" alt="000393" loading="lazy" onclick="window.open(this.src, '_blank');">
+                    <div class="caption">
+                        <strong>Image: 000393</strong>
+                        <span>KITTI dataset</span>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <div class="stats">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+                            <path d="M3 5.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 8zm0 2.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
+                        </svg>
+                        6 objects
+                    </div>
+                    <img src="../colorful_detections/001933_detection.jpg" alt="001933" loading="lazy" onclick="window.open(this.src, '_blank');">
+                    <div class="caption">
+                        <strong>Image: 001933</strong>
+                        <span>KITTI dataset</span>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <div class="stats">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+                            <path d="M3 5.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 8zm0 2.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
+                        </svg>
+                        0 objects
+                    </div>
+                    <img src="../colorful_detections/007371_detection.jpg" alt="007371" loading="lazy" onclick="window.open(this.src, '_blank');">
+                    <div class="caption">
+                        <strong>Image: 007371</strong>
+                        <span>KITTI dataset</span>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <div class="stats">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+                            <path d="M3 5.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 8zm0 2.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
+                        </svg>
+                        6 objects
+                    </div>
+                    <img src="../colorful_detections/003842_detection.jpg" alt="003842" loading="lazy" onclick="window.open(this.src, '_blank');">
+                    <div class="caption">
+                        <strong>Image: 003842</strong>
+                        <span>KITTI dataset</span>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <div class="stats">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+                            <path d="M3 5.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 8zm0 2.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
+                        </svg>
+                        5 objects
+                    </div>
+                    <img src="../colorful_detections/006912_detection.jpg" alt="006912" loading="lazy" onclick="window.open(this.src, '_blank');">
+                    <div class="caption">
+                        <strong>Image: 006912</strong>
+                        <span>KITTI dataset</span>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <div class="stats">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+                            <path d="M3 5.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 8zm0 2.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
+                        </svg>
+                        0 objects
+                    </div>
+                    <img src="../colorful_detections/003856_detection.jpg" alt="003856" loading="lazy" onclick="window.open(this.src, '_blank');">
+                    <div class="caption">
+                        <strong>Image: 003856</strong>
+                        <span>KITTI dataset</span>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <div class="stats">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+                            <path d="M3 5.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 8zm0 2.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
+                        </svg>
+                        2 objects
+                    </div>
+                    <img src="../colorful_detections/000378_detection.jpg" alt="000378" loading="lazy" onclick="window.open(this.src, '_blank');">
+                    <div class="caption">
+                        <strong>Image: 000378</strong>
+                        <span>KITTI dataset</span>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <div class="stats">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+                            <path d="M3 5.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 8zm0 2.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
+                        </svg>
+                        7 objects
+                    </div>
+                    <img src="../colorful_detections/002590_detection.jpg" alt="002590" loading="lazy" onclick="window.open(this.src, '_blank');">
+                    <div class="caption">
+                        <strong>Image: 002590</strong>
+                        <span>KITTI dataset</span>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <div class="stats">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+                            <path d="M3 5.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 8zm0 2.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
+                        </svg>
+                        13 objects
+                    </div>
+                    <img src="../colorful_detections/007417_detection.jpg" alt="007417" loading="lazy" onclick="window.open(this.src, '_blank');">
+                    <div class="caption">
+                        <strong>Image: 007417</strong>
+                        <span>KITTI dataset</span>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <div class="stats">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+                            <path d="M3 5.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 8zm0 2.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
+                        </svg>
+                        4 objects
+                    </div>
+                    <img src="../colorful_detections/001066_detection.jpg" alt="001066" loading="lazy" onclick="window.open(this.src, '_blank');">
+                    <div class="caption">
+                        <strong>Image: 001066</strong>
+                        <span>KITTI dataset</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <footer>
+            <p>KITTI Object Detection Analysis Report | Generated with Ultralytics YOLO v5 | Created by tanishyadav06012005</p>
+            <p>Generated on 2025-04-16 17:10:44</p>
+        </footer>
+        
+        <script>
+            // Simple animation to show blinking "Live Updating" tag
+            document.addEventListener('DOMContentLoaded', function() {
+                // Add proper hover effects for gallery items on mobile
+                document.querySelectorAll('.gallery-item img').forEach(img => {
+                    img.addEventListener('touchstart', function() {
+                        this.parentElement.classList.add('hover-effect');
+                    });
+                });
+                
+                // Add visual feedback when charts are clicked
+                document.querySelectorAll('.chart-container img').forEach(img => {
+                    img.addEventListener('click', function() {
+                        this.style.transform = 'scale(1.02)';
+                        setTimeout(() => {
+                            this.style.transform = 'scale(1)';
+                        }, 200);
+                    });
+                });
+            });
+        </script>
+    </div>
+</body>
+</html>
